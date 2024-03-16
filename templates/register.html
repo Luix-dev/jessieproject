@@ -1,108 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    ...
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
 <body>
-    {% include '_flash_messages.html' %}
-  
-
-    <form class="register-form" method="POST" action="{{ url_for('register') }}">
-        {{ form.hidden_tag() }}
-        <div class="register-form-container">
-            <p>
-                {{ form.username.label }}<br>
-                {{ form.username(class="input", size=32) }}<br>
-                {% for error in form.username.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.email.label }}<br>
-                {{ form.email(class="input", size=32) }}<br>
-                {% for error in form.email.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.password.label }}<br>
-                {{ form.password(class="input", size=32) }}<br>
-                {% for error in form.password.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>
-                {{ form.password2.label }}<br>
-                {{ form.password2(class="input", size=32) }}<br>
-                {% for error in form.password2.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            </p>
-            <p>{{ form.submit(class="submit") }}</p>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h2>Register</h2>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <form method="POST" action="{{ url_for('register') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ form.username.label(class="form-control-label") }}
+                        {{ form.username(class="form-control") }}
+                        {% for error in form.username.errors %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.email.label }}
+                        {{ form.email(class="form-control") }}
+                        {% for error in form.email.errors %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.password.label }}
+                        {{ form.password(class="form-control") }}
+                        {% for error in form.password.errors %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.password2.label }}
+                        {{ form.password2(class="form-control") }}
+                        {% for error in form.password2.errors %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+            </div>
         </div>
-    </form>
+    </div>
+    
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-    }
-
-    .register-form-container {
-        position: relative;
-        margin-top: 100px !important;
-        width: 300px;
-        margin: 50px auto;
-        padding: 20px;
-        border: 2px solid #ccc;
-        border-radius: 10px;
-        background-color: #fff;
-    }
-
-    .register-form p {
-        margin-bottom: 15px;
-    }
-
-    .register-form input[type="text"],
-    .register-form input[type="password"] {
-        width: calc(100% - 20px); /* Adjusted width to accommodate padding */
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-sizing: border-box;
-    }
-
-    .register-form input[type="submit"] {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        background-color: #4caf50;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-    .register-form input[type="submit"]:hover {
-        background-color: #388e3c; /* Darker color on hover */
-    }
-
-    .register-icon {
-        position: absolute;
-        top: -60px; /* Adjusted position */
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    .register-icon svg {
-        width: 50px; /* Adjusted size */
-        height: 50px; /* Adjusted size */
-    }
-
-    @keyframes float {
-        from {
-            transform: translateY(0);
-        }
-        to {
-            transform: translateY(-5px);
-        }
-    }
-</style>
-
 </html>

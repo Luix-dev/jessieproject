@@ -1,7 +1,7 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, abort, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate  # Import Flask-Migrate
-from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
 # Import models after initializing SQLAlchemy and Flask-Migrate to avoid circular imports
 from forms import RegisterForm
-from models import User
+from models import User, Todo
 
 # User loader function for Flask-Login
 @login_manager.user_loader
@@ -61,7 +61,8 @@ def login():
 @app.route('/')
 @login_required
 def home():
-    return render_template('home.html')
+    todos = Todo.query.filter_by(user_id=current_user.id).all()
+    return render_template('home.html', todos=todos)
 
 @app.route('/logout')
 @login_required
@@ -86,6 +87,68 @@ def register():
             flash('Email already exists.', 'error')
             return redirect(url_for('register'))
     return render_template('register.html', form=form)
+
+
+#####################################################
+# Routes for the ToDo application
+#####################################################
+
+@app.route('/todos/create', methods=['GET', 'POST'])
+@login_required
+def create_todo():
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form.get('description', '')
+        new_todo = Todo(title=title, description=description, user_id=current_user.id)
+        db.session.add(new_todo)
+        db.session.commit()
+        flash('ToDo item created successfully.', 'success')
+        return redirect(url_for('home'))
+    return render_template('create_todo.html')
+
+
+@app.route('/todos/update/<int:todo_id>', methods=['GET', 'POST'])
+@login_required
+def update_todo(todo_id):
+    todo = Todo.query.get_or_404(todo_id)
+    if todo.user_id != current_user.id:
+        flash('You are not authorized to perform this action.', 'error')
+        abort(403)
+    if request.method == 'POST':
+        todo.title = request.form['title']
+        todo.description = request.form.get('description', '')
+        db.session.commit()
+        flash('ToDo item updated successfully.', 'success')
+        return redirect(url_for('home'))
+    return render_template('update_todo.html', todo=todo)
+
+@app.route('/todos/edit/<int:todo_id>', methods=['GET', 'POST'])
+@login_required
+def edit_todo(todo_id):
+    todo = Todo.query.get_or_404(todo_id)
+    if todo.user_id != current_user.id:
+        flash('You are not authorized to perform this action.', 'error')
+        abort(403)  # Forbidden access
+    if request.method == 'POST':
+        todo.title = request.form['title']
+        todo.description = request.form.get('description', '')
+        db.session.commit()
+        flash('ToDo updated successfully!', 'success')
+        return redirect(url_for('home'))
+    return render_template('edit_todo.html', todo=todo)
+
+
+@app.route('/todos/delete/<int:todo_id>', methods=['POST'])
+@login_required
+def delete_todo(todo_id):
+    todo = Todo.query.get_or_404(todo_id)
+    if todo.user_id != current_user.id:
+        flash('You are not authorized to perform this action.', 'error')
+        abort(403)
+    db.session.delete(todo)
+    db.session.commit()
+    flash('ToDo item deleted successfully.', 'success')
+    return redirect(url_for('home'))
 
 
 # Unauthorized handler
