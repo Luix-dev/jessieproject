@@ -1,4 +1,4 @@
-from flask import Flask, abort, render_template, redirect, url_for, request, flash
+from flask import Flask, abort, jsonify, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate  # Import Flask-Migrate
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -8,11 +8,12 @@ from wtforms import StringField, PasswordField
 from wtforms.validators import InputRequired
 from flask import flash
 from sqlalchemy.exc import IntegrityError
+from config import Config 
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@db:5432/mydatabase'
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config.from_object(Config) 
+
 
 # Initialize Flask extensions
 db = SQLAlchemy(app)
@@ -45,6 +46,17 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
 
+@app.route('/')
+@login_required
+def home():
+    todos = Todo.query.filter_by(user_id=current_user.id).all()
+    return render_template('home.html', todos=todos)
+
+
+#####################################################
+# Routes User Authentication
+#####################################################
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -58,22 +70,29 @@ def login():
             flash('Invalid username or password. Please try again.', 'error')  # Error message
     return render_template('login.html', form=form)
 
-@app.route('/')
-@login_required
-def home():
-    todos = Todo.query.filter_by(user_id=current_user.id).all()
-    return render_template('home.html', todos=todos)
-
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
+from sqlalchemy.exc import IntegrityError
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
+        user_by_username = User.query.filter_by(username=form.username.data).first()
+        user_by_email = User.query.filter_by(email=form.email.data).first()
+        
+        if user_by_username:
+            flash('Username already exists.', 'error')
+            return redirect(url_for('register'))
+        
+        if user_by_email:
+            flash('Email already exists.', 'error')
+            return redirect(url_for('register'))
+        
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         new_user = User(username=form.username.data, email=form.email.data, password_hash=hashed_password)
         try:
@@ -84,9 +103,12 @@ def register():
             return redirect(url_for('home'))  # Redirect to the main page
         except IntegrityError:
             db.session.rollback()
-            flash('Email already exists.', 'error')
+            # This block might be redundant now due to the explicit checks above,
+            # but it's kept here for any other unforeseen IntegrityError.
+            flash('Registration failed due to an unexpected error. Please try again.', 'error')
             return redirect(url_for('register'))
     return render_template('register.html', form=form)
+
 
 
 #####################################################
@@ -150,6 +172,22 @@ def delete_todo(todo_id):
     flash('ToDo item deleted successfully.', 'success')
     return redirect(url_for('home'))
 
+#########################
+# API accessible ToDos
+#########################
+# Get all ToDo items
+@app.route('/api/todos', methods=['GET'])
+def get_todos():
+    todos = Todo.query.all()
+    todos_list = [{'id': todo.id, 'title': todo.title, 'description': todo.description} for todo in todos]
+    return jsonify(todos_list)
+
+# Get a specific ToDo item by ID
+@app.route('/api/todos/<int:todo_id>', methods=['GET'])
+def get_todo(todo_id):
+    todo = Todo.query.get_or_404(todo_id)
+    return jsonify({'id': todo.id, 'title': todo.title, 'description': todo.description})
+
 
 # Unauthorized handler
 @app.errorhandler(401)
@@ -158,3 +196,6 @@ def unauthorized_handler(error):
 
 if __name__ == '__main__': 
     app.run(debug=True)
+
+
+
