@@ -32,7 +32,8 @@
             box-sizing: border-box;
         }
 
-        .login-form input[type="submit"] {
+        /* Style for both buttons to ensure consistency */
+        .button {
             width: 100%;
             padding: 10px;
             border: none;
@@ -40,23 +41,26 @@
             background-color: #4caf50;
             color: white;
             cursor: pointer;
+            text-align: center;
+            text-decoration: none; 
+            display: inline-block;
             transition: background-color 0.3s;
         }
 
-        .login-form input[type="submit"]:hover {
-            background-color: #388e3c; /* Darker color on hover */
+        .button:hover {
+            background-color: #388e3c; 
         }
 
         .login-icon {
             position: absolute;
-            top: -60px; /* Adjusted position */
+            top: -60px; 
             left: 50%;
             transform: translateX(-50%);
         }
 
         .login-icon svg {
-            width: 50px; /* Adjusted size */
-            height: 50px; /* Adjusted size */
+            width: 50px;
+            height: 50px;
         }
 
         @keyframes float {
@@ -67,9 +71,45 @@
                 transform: translateY(-5px);
             }
         }
+
+        .register-link {
+            width: 100%; /* Full width */
+            padding: 10px; /* Match input padding */
+            display: block; /* Allows width to take effect */
+            text-align: center; /* Center the text */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #4caf50;
+            color: white;
+            text-decoration: none; /* Remove underline */
+            box-sizing: border-box; /* Include padding and border in the element's width */
+            transition: background-color 0.3s;
+        }
+
+        .register-link:hover {
+            background-color: #388e3c;
+        }
+
+        .flash-success {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .flash-error {
+            padding: 10px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+        }
+
     </style>
 </head>
 <body>
+
+    {% include '_flash_messages.html' %}
+
     <div class="login-form-container">
         <form action="" method="post" class="login-form">
             <div class="login-icon">
@@ -87,9 +127,9 @@
                 {{ form.password.label }}<br>
                 {{ form.password(size=32) }}
             </p>
-            <p><input type="submit" value="Log In">
+            <p><input type="submit" class="button" value="Log In"></p>
         </form>
-        <a href="{{ url_for('register') }}">Register a new account</a>
+        <a href="{{ url_for('register') }}" class="register-link">Register</a>
     </div>
 </body>
 </html>

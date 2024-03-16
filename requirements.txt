@@ -8,3 +8,4 @@ SQLAlchemy==2.0.25
 Werkzeug==3.0.0
 Flask-Bcrypt==1.0.1
 psycopg2-binary==2.9.9
+email_validator==2.1.1
